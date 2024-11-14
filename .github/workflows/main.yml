@@ -19,18 +19,13 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
-
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io docker-compose
+          node-version: '20'  # Memastikan versi Node.js yang kompatibel
 
       - name: Check out the repo
         uses: actions/checkout@v3
 
       - name: Build the Docker image
-        run: docker-compose build --no-cache --force-rm --platform linux/amd64
+        run: docker-compose build --no-cache --force-rm --platform linux/amd64  # Platform ditambahkan
 
   test:
     runs-on: ubuntu-latest
@@ -40,22 +35,17 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io docker-compose
-
       - name: Check out the repo
         uses: actions/checkout@v3
 
       - name: Tear down any existing containers
-        run: docker-compose down || true
+        run: docker-compose down || true  # Pastikan kontainer sebelumnya dihentikan
 
       - name: Test the Docker image
-        run: docker-compose up -d --platform linux/amd64
+        run: docker-compose up -d --platform linux/amd64  # Menambahkan platform untuk menghindari masalah arsitektur
 
       - name: Run tests
-        run: docker-compose exec app npm test
+        run: docker-compose exec app npm test  # Menjalankan tes dalam kontainer
 
   push_to_registry:
     name: Push Docker image to Docker Hub
@@ -66,11 +56,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io docker-compose
-
       - name: Check out the repo
         uses: actions/checkout@v3
 
@@ -78,22 +63,22 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v2  # Menggunakan versi stabil dari login action
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v4  # Menggunakan versi terbaru metadata-action
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v3  # Menggunakan versi terbaru dari build-push-action
         with:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64
+          platforms: linux/amd64  # Menentukan platform untuk menghindari masalah kompatibilitas
